@@ -44,3 +44,15 @@
   - I wrote the print-out statements I needed, based off of prof's sample txt on elearning
 - Next session I need to see how to signal that the three tellers are available and the bank opens
   - I originally said for there to be a bankOpen semaphore, but it could also just be a simple boolean which I set to true
+
+11-04-25 10:19 am
+- this is before session
+- I did some research as to when to use mutexes vs semaphores in java
+  - mutexes are for locking and unlocking and only use 1 thread at a time
+    - key words: synchronized(lock) {sensitive data} 
+      - lock can be any Object
+      - synchronized treats the {data} as critical
+  - semaphores are for limiting number of threads to a resource or signaling between threads
+- I feel like instead of focusing mainly on using semaphores I can also use mutexes
+- I will see if I can use mutex in figuring out if teller is available or not
+- for this session I plan on figuring out teller logic and completing pseudocode for it
