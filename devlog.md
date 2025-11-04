@@ -56,3 +56,18 @@
 - I feel like instead of focusing mainly on using semaphores I can also use mutexes
 - I will see if I can use mutex in figuring out if teller is available or not
 - for this session I plan on figuring out teller logic and completing pseudocode for it
+
+11-04-25 11:09 am
+- after session
+- this session i added locks/mutexes
+  - I added two locks, one for tellers and one for the bank state itself
+  - to track teller availability I used a static array (so customers can use too)
+    - tellerLock allows one teller at a time manipulate this array
+  - to track bank opening, I used bankLock
+    - after each teller is available, one at a time they go to bankLock mutex, increment count, and 
+    - as long as count = 3 then bank opens
+- I made a loop in teller logic that keeps running as long as there are customers left to be serviced
+  - if there isn't anymore the loop stops
+- I did additional pseudocode as well for teller logic
+- for next session I need to figure out semaphore logic because I am still iffy on it
+- next session I want to finish coding for teller logic

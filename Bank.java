@@ -1,20 +1,26 @@
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 public class Bank {
-    int TellerCount = 3;
-    int customerCount = 1;
+    static int TellerCount = 3;
+   static int customerCount = 1;
 
     // Semaphores
-    Semaphore safe = new Semaphore(2);
-    Semaphore manager = new Semaphore(1);
-    Semaphore door = new Semaphore(2);
-    Semaphore bankOpen = new Semaphore(0);
-    Semaphore isTellerReady = new Semaphore(TellerCount);
-    Semaphore customerGiveID = new Semaphore(TellerCount);
-    Semaphore tellerAskType = new Semaphore(TellerCount);
-    Semaphore customerGiveType = new Semaphore(TellerCount);
-    Semaphore transactionDone = new Semaphore(TellerCount);
-    Semaphore customerLeaveBank = new Semaphore(TellerCount);
+    static Semaphore safe = new Semaphore(2);
+    static Semaphore manager = new Semaphore(1);
+    static Semaphore door = new Semaphore(2);
+    //static Semaphore bankOpen = new Semaphore(0);
+    static Semaphore isTellerReady = new Semaphore(TellerCount);
+    static Semaphore customerGiveID = new Semaphore(TellerCount);
+    static Semaphore tellerAskType = new Semaphore(TellerCount);
+    static Semaphore customerGiveType = new Semaphore(TellerCount);
+    static Semaphore transactionDone = new Semaphore(TellerCount);
+    static Semaphore customerLeaveBank = new Semaphore(TellerCount);
+    static final Object tellerLock = new Object();
+    static final Object bankLock = new Object();
+    static boolean isBankOpen = false;
+    static boolean[] isTellerAvailable = new boolean[TellerCount];
+    static int tellersReadyCount = 0;
+    static int customersAllServed = 0;
 
     public void main(String[] args) {
         // create and start teller threads
@@ -49,13 +55,11 @@ public class Bank {
     }
 
     static class Teller extends Thread {
-        // teller id
-        int id;
+        int id; // teller id
 
-        // constructor
         public Teller(int id) {
             this.id = id;
-        }
+        } // constructor
 
         @Override
         public void run() {
@@ -66,41 +70,87 @@ public class Bank {
             // when all three tellers are ready the bank opens
             // some sort of logic to see when all three tellers are available, which then opens the bank
             // maybe bankOpen should be some boolean? which is set to true when all three are ready
-
-            // teller waits for a customer
-            System.out.println("Teller " + id + " []: waiting for a customer");
-
-            // customer comes up, store their id
-            int customerID;
-            System.out.println("Teller " + id + " [Customer " + customerID + "]: serving a customer");
-
-            // teller asks for transaction type
-            System.out.println("Teller " + id + " [Customer " + customerID + "]: asks for transaction");
-
-            // teller waits for transaction
-
-            // store transaction
-            String transaction;
-
-            // if withdrawal go to manager
-            if (transaction.equals("withdrawal")) {
-                System.out.println("Teller " + id + " [Customer " + customerID + "]: handling a withdrawal");
-                System.out.println("Teller " + id + " [Customer " + customerID + "]: going to manager");
-
-                // logic to get manager's permission
-            } else {
-                System.out.println("Teller " + id + " [Customer " + customerID + "]: handling a deposit");
+            // lock so that each teller says they are ready
+            synchronized (tellerLock) {
+                isTellerAvailable[id] = true;
             }
 
-            // go to safe
-            System.out.println("Teller " + id + " [Customer " + customerID + "]: going to safe");
-            // logic for safe
+            // lock so each teller goes in and increments count
+            synchronized (bankLock) {
+                tellersReadyCount++;
+                if (tellersReadyCount == TellerCount) {
+                    isBankOpen = true;
+                }
+            }
 
-            // tell customer transaction is done
-            System.out.println("Teller " + id + " [Customer " + customerID + "]: finishes " + transaction);
+            // each teller thread can work with multiple customers, loop until all customers are served
+            boolean b = true;
+            while(b) {
+                // check if all 50 have been served
+                // if they have been false --> get out of loop
+                // if not then continue
+                // this needs to be in lock since only one thread needs to do this
+                synchronized (bankLock) {
+                    if (customersAllServed == customerCount) {
+                        b = false;
+                    }
+                }
 
-            // wait for customer to leave
-            System.out.println("Teller " + id + " [Customer " + customerID + "]: waits for customer to leave");
+                // teller waits for a customer
+                System.out.println("Teller " + id + " []: waiting for a customer");
+
+                // if this is teller's second or more customer, its available boolean is probably false, switch it to true
+                synchronized (tellerLock) {
+                    isTellerAvailable[id] = true;
+                }
+
+                // we have to signal customer to come to teller, semaphore?
+
+                // customer comes up, store their id
+                int customerID;
+                System.out.println("Teller " + id + " [Customer " + customerID + "]: serving a customer");
+
+                // teller asks for transaction type
+                System.out.println("Teller " + id + " [Customer " + customerID + "]: asks for transaction");
+
+                // teller waits for transaction, semaphore?
+
+                // store transaction
+                String transaction;
+
+                // if withdrawal go to manager
+                if (transaction.equals("withdrawal")) {
+                    System.out.println("Teller " + id + " [Customer " + customerID + "]: handling a withdrawal");
+                    System.out.println("Teller " + id + " [Customer " + customerID + "]: going to manager");
+
+                    // semaphore here, aquire? only one teller to manager
+                    System.out.println("Teller " + id + " [Customer " + customerID + "]: getting to managers permission");
+
+                    // random time
+
+                    System.out.println("Teller " + id + " [Customer " + customerID + "]: got to manager's permission");
+                    // semaphore, release?
+
+                } else {
+                    System.out.println("Teller " + id + " [Customer " + customerID + "]: handling a deposit");
+                }
+
+                // go to safe
+                System.out.println("Teller " + id + " [Customer " + customerID + "]: going to safe");
+                // semaphore for safe, only 2 teller's at a time, aquire
+                // semaphore release
+                System.out.println("Teller " + id + " [Customer " + customerID + "]: leaving safe");
+
+                // tell customer transaction is done
+                System.out.println("Teller " + id + " [Customer " + customerID + "]: finishes " + transaction);
+                // semaphore release, so customer can leave
+
+                // wait for customer to leave
+                System.out.println("Teller " + id + " [Customer " + customerID + "]: waits for customer to leave");
+                // semaphore to wait until customer actually left
+            }
+
+            System.out.println("Teller " + id + "[]: leaves bank");
         }
     }
 
