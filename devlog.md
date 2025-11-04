@@ -29,3 +29,9 @@
   7. teller waits for customer to leave bank
 
 - for this session I will write the semaphores I brainstormed just now
+
+11-03-25 6:57 pm 
+- this is before session
+- I forgot to mention that I will write this code in IntelliJ using Java
+- this will be my first session, in the last entry I implied that that was my first session, but I am doing it today instead
+- for this session I plan on writing the semaphore I planned out and maybe writing additional pseudocode for the program
