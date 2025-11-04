@@ -35,3 +35,12 @@
 - I forgot to mention that I will write this code in IntelliJ using Java
 - this will be my first session, in the last entry I implied that that was my first session, but I am doing it today instead
 - for this session I plan on writing the semaphore I planned out and maybe writing additional pseudocode for the program
+
+11-03-25 10:03 pm
+- after session
+- I need to refresh myself on how to implement mutexes and threads in java
+- I was able to write out the semaphores I was planning on using
+- I wrote additional pseudocode and even mapped out the teller and customer synchronization
+  - I wrote the print-out statements I needed, based off of prof's sample txt on elearning
+- Next session I need to see how to signal that the three tellers are available and the bank opens
+  - I originally said for there to be a bankOpen semaphore, but it could also just be a simple boolean which I set to true
