@@ -71,3 +71,14 @@
 - I did additional pseudocode as well for teller logic
 - for next session I need to figure out semaphore logic because I am still iffy on it
 - next session I want to finish coding for teller logic
+
+11-05-25 5:35 pm
+- before session
+- I learned more about how to use semaphores in code
+  - for resource protection, we use semaphores in this way:
+    - semaphore.acquire() to get permission then
+    - semaphore.release() to release permission
+  - for coordination, we use semaphores in this way:
+    - semaphore.release() to signal readiness, increments from 0 to 1 and then
+    - semaphore.acquire() to signal that they're busy, decrements 1 to 0
+  - this session I plan to add the rest of the semaphores and hopefully finish teller class
