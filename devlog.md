@@ -105,3 +105,11 @@
   - may want to double-check if teller is actually available, since another customer could have picked up the release signal
 - for this session I plan on finishing the code
 - to test I will start with 1-3 customers and debug
+
+11-06-25 5:51 pm
+- after session
+- I completed the code and am now debugging it
+- When running with one customer and three tellers the data flow seems fine but the program does not automatically stop after the last customer leaves
+  - the program should be checking for if all the customer a served and if they are the bank should close
+- For next session I will continue to debug and hopefully figure out the issue
+- I will also add comments and see if the program works on utd cs server
