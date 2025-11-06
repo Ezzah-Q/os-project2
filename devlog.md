@@ -82,3 +82,10 @@
     - semaphore.release() to signal readiness, increments from 0 to 1 and then
     - semaphore.acquire() to signal that they're busy, decrements 1 to 0
   - this session I plan to add the rest of the semaphores and hopefully finish teller class
+
+11-05-25 10:24 pm
+- after session
+- did a lot, got a hang of semaphores used in coordination now
+- finished teller code and most of the customer code
+  - need to map out the customer waiting in line and find available teller logic
+  - this is the plan for next session, I would like to be done with this code by then
