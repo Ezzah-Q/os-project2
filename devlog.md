@@ -89,3 +89,19 @@
 - finished teller code and most of the customer code
   - need to map out the customer waiting in line and find available teller logic
   - this is the plan for next session, I would like to be done with this code by then
+
+11-06-25 1:28 pm
+- before session
+- I thought about the logic of the customer choosing a teller
+- here's what I know:
+  - customer gets in line
+  - customer scans the tellers and see if any are available
+    - if they are then choose that one
+    - this should be in a lock since one thread is scanning at a time
+  - if a teller is not available they wait for one to become free
+    - they know if a teller is free if teller signals they are free
+      - try to acquire isTellerReady[id]
+      - will use tryAcquire instead of just acquire, since tryAcquire returns true or false immediately
+  - may want to double-check if teller is actually available, since another customer could have picked up the release signal
+- for this session I plan on finishing the code
+- to test I will start with 1-3 customers and debug
