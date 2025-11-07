@@ -113,3 +113,9 @@
   - the program should be checking for if all the customer a served and if they are the bank should close
 - For next session I will continue to debug and hopefully figure out the issue
 - I will also add comments and see if the program works on utd cs server
+
+11-06-25 10:34 pm
+- before session
+- I think the problem is something in the loop in teller class
+  - since the print statement of teller leaving the bank is not reached and that is out of the loop
+- for this session I plan on debugging this some more
