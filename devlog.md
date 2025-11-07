@@ -119,3 +119,14 @@
 - I think the problem is something in the loop in teller class
   - since the print statement of teller leaving the bank is not reached and that is out of the loop
 - for this session I plan on debugging this some more
+
+11-06-25 11:50 pm
+- after debugging finally discovered what was wrong
+- first, I realized that the customer variable that was keeping track of the amount of customers services wasn't updating
+  - this was a logic error, so I rearranged the order in the customer class to have the increment happen before the signal to teller
+- after fixing that, there was another error, the program was still not ending
+  - turns out that I needed to add logic that signaled the other waiting tellers that the last customer was services
+    - at the very end of customer class, I had the last customer signal the other tellers
+- next session I will test this with 50 customers
+- I will see if this works on the utd cs server
+- I will also finish adding comments

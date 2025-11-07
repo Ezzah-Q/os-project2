@@ -44,7 +44,8 @@ public class Bank {
         Thread[] tellers = new Thread[TellerCount];
         for (int i = 0; i < TellerCount; i++) {
             //start teller thread
-            tellers[i] = new Thread(new Teller(i));
+            //tellers[i] = new Thread(new Teller(i));
+            tellers[i] = new Teller(i);
             tellers[i].start();
         }
 
@@ -52,18 +53,15 @@ public class Bank {
         Thread[] customers = new Thread[customerCount];
         for (int i = 0; i < customerCount; i++) {
             //start customer thread
-            customers[i] = new Thread(new Customer(i));
+            //customers[i] = new Thread(new Customer(i));
+            customers[i] = new Customer(i);
             customers[i].start();
         }
 
         // when threads are done close the program/bank
         try {
-            for (Thread teller : tellers) {
-                teller.join();
-            }
-            for (Thread customer : customers) {
-                customer.join();
-            }
+            for (Thread teller : tellers) teller.join();
+            for (Thread customer : customers) customer.join();
         } catch (InterruptedException e) {
                 System.err.println("Error joining with Thread" + e);
             }
@@ -102,18 +100,17 @@ public class Bank {
             }
 
             // each teller thread can work with multiple customers, loop until all customers are served
-            boolean b = true;
-            while(b) {
+            //boolean b = true;
+            while(true) {
                 // check if all 50 have been served
                 // if they have been false --> get out of loop
                 // if not then continue
                 // this needs to be in lock since only one thread needs to do this
-              /*  synchronized (bankLock) {
-                    if (customersAllServed == customerCount) {
-                        b = false;
-                        continue;
+                synchronized (bankLock) {
+                    if (customersAllServed >= customerCount) {
+                        break;
                     }
-                }*/
+                }
 
                 // teller waits for a customer
                 System.out.println("Teller " + id + " []: waiting for a customer");
@@ -127,13 +124,6 @@ public class Bank {
                 // use semaphore.release to signal that teller is ready
                 // need to make sure that the same teller is talking to the same customer --> array of semaphores, index is id
                 isTellerReady[id].release();
-
-                // Check if all customers are served BEFORE blocking on acquire
-                synchronized (bankLock) {
-                    if (customersAllServed >= customerCount) {
-                        break;  // Exit the while loop
-                    }
-                }
 
                 // teller has to wait for customer to come to them and give their id
                 // teller will try to get signal from semaphore, if its already released teller should be able to acquire it
@@ -149,7 +139,6 @@ public class Bank {
                         break;
                     }
                 }
-
 
                 // store customer's id, use array to store all ids
                 int customerID = customerIdArray[id];
@@ -190,7 +179,7 @@ public class Bank {
                         // semaphore, release?
                         manager.release();
                     } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                        e.printStackTrace();
                     }
                 } else {
                     System.out.println("Teller " + id + " [Customer " + customerID + "]: handling a deposit");
@@ -213,20 +202,19 @@ public class Bank {
                     safe.release();
 
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
 
                 // tell and signal customer transaction is done
                 System.out.println("Teller " + id + " [Customer " + customerID + "]: finishes " + transaction);
+                System.out.println("Teller " + id + " [Customer " + customerID + "]: waits for customer to leave");
                 transactionDone[id].release();
 
-                // wait for customer to leave
-                System.out.println("Teller " + id + " [Customer " + customerID + "]: waits for customer to leave");
                 // semaphore to wait until customer actually left
                 try {
                     customerLeaveBank[id].acquire();
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
 
@@ -249,8 +237,8 @@ public class Bank {
             System.out.println("Customer " + id + " []: wants to perform a " + transaction);
 
             // wait random time
-            int wait = random.nextInt(100);
             try {
+                int wait = random.nextInt(100);
                 Thread.sleep(wait);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -261,7 +249,7 @@ public class Bank {
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
 
@@ -274,7 +262,7 @@ public class Bank {
                 System.out.println("Customer " + id + " []: entering bank");
                 door.release();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
 
             // get in line and wait for teller
@@ -321,7 +309,7 @@ public class Bank {
                             Thread.sleep(10);
                         }
                     } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                        e.printStackTrace();
                     }
                 }
             }
@@ -338,7 +326,7 @@ public class Bank {
             try {
                 tellerAskType[tellerID].acquire();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
 
             // give teller transaction type and signal
@@ -355,14 +343,23 @@ public class Bank {
 
             // leave the bank signal teller
             System.out.println("Customer " + id + " [Teller " + tellerID + "]: leaves teller");
-            customerLeaveBank[tellerID].release();
-
-            System.out.println("Customer " + id + " []: goes to door");
-            System.out.println("Customer " + id + " []: leaves the bank");
 
             // need to increment the count of customers served, but only one thread does it at a time --> lock
             synchronized (bankLock) {
                 customersAllServed++;
+            }
+
+            System.out.println("Customer " + id + " []: goes to door");
+            System.out.println("Customer " + id + " []: leaves the bank");
+
+            customerLeaveBank[tellerID].release();
+
+            // if this is the last customer make sure to let the other existing teller threads know
+            // otherwise tellers will endlessly wait for a non-existing customer
+            if (customersAllServed >= customerCount) {
+                for (int i = 0; i < TellerCount; i++) {
+                    customerGiveID[i].release();
+                }
             }
         }
     }
