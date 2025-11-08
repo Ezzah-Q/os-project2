@@ -141,3 +141,7 @@
 - code logic seems in order for 50 customers
 - code works on cs1 machines
 - added comments
+
+11-07-25 7:03pm
+- forgot to add a readme
+
