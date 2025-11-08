@@ -135,3 +135,9 @@
 - before session
 - Today I will test program with 50 customers to see if the logic still holds
 - I will also see if this code works on the utd servers
+
+11-07-25 7:01 pm
+- after session
+- code logic seems in order for 50 customers
+- code works on cs1 machines
+- added comments

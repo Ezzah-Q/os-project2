@@ -1,32 +1,39 @@
+/**
+ * Bank simulation with three tellers and 50 customers. Demonstrate use of shared resources and
+ * thread coordination via Semaphores, and using mutexes in Java.
+ * Ezzah Qureshi Nov 7th, 2025
+ */
+
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 public class Bank {
+    // constants
     static int TellerCount = 3;
-    static int customerCount = 1;
+    static int customerCount = 50;
 
     // Semaphores for shared resources
-    static Semaphore safe = new Semaphore(2);
-    static Semaphore manager = new Semaphore(1);
-    static Semaphore door = new Semaphore(2);
+    static Semaphore safe = new Semaphore(2); // only 2 tellers go into safe at a time
+    static Semaphore manager = new Semaphore(1); // only 1 teller talks to manager at a time
+    static Semaphore door = new Semaphore(2); // only 2 customers walk through door at a time
 
     // Semaphores for coordination between teller and customer
-    static Semaphore[] isTellerReady = new Semaphore[TellerCount]; //when teller is busy customer must wait
-    static Semaphore[] customerGiveID = new Semaphore[TellerCount];
-    static Semaphore[] tellerAskType = new Semaphore[TellerCount];
-    static Semaphore[] customerGiveType = new Semaphore[TellerCount];
-    static Semaphore[] transactionDone = new Semaphore[TellerCount];
-    static Semaphore[] customerLeaveBank = new Semaphore[TellerCount];
+    static Semaphore[] isTellerReady = new Semaphore[TellerCount]; // signal customer that teller is ready
+    static Semaphore[] customerGiveID = new Semaphore[TellerCount]; // signal teller that customer is there
+    static Semaphore[] tellerAskType = new Semaphore[TellerCount]; // signal customer to give transaction type
+    static Semaphore[] customerGiveType = new Semaphore[TellerCount]; // signal teller to do the transaction
+    static Semaphore[] transactionDone = new Semaphore[TellerCount]; // signal customer transaction is done
+    static Semaphore[] customerLeaveBank = new Semaphore[TellerCount]; // signal teller customer has left bank
 
     // other variables
-    static final Object tellerLock = new Object();
-    static final Object bankLock = new Object();
-    static boolean isBankOpen = false;
-    static boolean[] isTellerAvailable = new boolean[TellerCount];
-    static int tellersReadyCount = 0;
-    static int customersAllServed = 0;
-    static int[] customerIdArray = new int[TellerCount];
-    static String[] customerTransactionArray = new String[TellerCount];
-    static int[] customerAtTeller = new int[TellerCount];
+    static final Object tellerLock = new Object(); // a lock used for handling teller array
+    static final Object bankLock = new Object(); // a lock used for handling bank state
+    static boolean isBankOpen = false; // boolean to see id bank is open
+    static boolean[] isTellerAvailable = new boolean[TellerCount]; // boolean array that states if each teller is available
+    static int tellersReadyCount = 0; // counter
+    static int customersAllServed = 0; // counter
+    static int[] customerIdArray = new int[TellerCount]; // stores the customer's id currently being served
+    static String[] customerTransactionArray = new String[TellerCount]; // stores the transactions that the customer wanted
+    static int[] customerAtTeller = new int[TellerCount]; // keep track of which customer is being served at each teller
 
     public static void main(String[] args) {
         // initialize semaphores
@@ -44,7 +51,6 @@ public class Bank {
         Thread[] tellers = new Thread[TellerCount];
         for (int i = 0; i < TellerCount; i++) {
             //start teller thread
-            //tellers[i] = new Thread(new Teller(i));
             tellers[i] = new Teller(i);
             tellers[i].start();
         }
@@ -53,7 +59,6 @@ public class Bank {
         Thread[] customers = new Thread[customerCount];
         for (int i = 0; i < customerCount; i++) {
             //start customer thread
-            //customers[i] = new Thread(new Customer(i));
             customers[i] = new Customer(i);
             customers[i].start();
         }
@@ -66,16 +71,18 @@ public class Bank {
                 System.err.println("Error joining with Thread" + e);
             }
         System.out.println("Bank is now closed");
-
     }
 
+    /**
+     * Teller class handles the teller logic
+     */
     static class Teller extends Thread {
         int id; // teller id
         private final Random random = new Random();
 
         public Teller(int id) {
             this.id = id;
-        } // constructor
+        }
 
         @Override
         public void run() {
@@ -84,9 +91,6 @@ public class Bank {
             System.out.println("Teller " + id + " []: ready to serve");
 
             // when all three tellers are ready the bank opens
-            // some sort of logic to see when all three tellers are available, which then opens the bank
-            // maybe bankOpen should be some boolean? which is set to true when all three are ready
-            // lock so that each teller says they are ready
             synchronized (tellerLock) {
                 isTellerAvailable[id] = true;
             }
@@ -94,18 +98,16 @@ public class Bank {
             // lock so each teller goes in and increments count
             synchronized (bankLock) {
                 tellersReadyCount++;
+                // when tellers ready is 3, the bank opens
                 if (tellersReadyCount == TellerCount) {
                     isBankOpen = true;
                 }
             }
 
             // each teller thread can work with multiple customers, loop until all customers are served
-            //boolean b = true;
             while(true) {
                 // check if all 50 have been served
-                // if they have been false --> get out of loop
-                // if not then continue
-                // this needs to be in lock since only one thread needs to do this
+                // if they have been, get out of loop
                 synchronized (bankLock) {
                     if (customersAllServed >= customerCount) {
                         break;
@@ -120,8 +122,7 @@ public class Bank {
                     isTellerAvailable[id] = true;
                 }
 
-                // we have to signal customer to come to teller, semaphore?
-                // use semaphore.release to signal that teller is ready
+                // we have to signal customer to come to teller
                 // need to make sure that the same teller is talking to the same customer --> array of semaphores, index is id
                 isTellerReady[id].release();
 
@@ -222,6 +223,9 @@ public class Bank {
         }
     }
 
+    /**
+     * customer class handles customer logic
+     */
     static class Customer extends Thread {
         int id;
         private final Random random = new Random();
@@ -278,6 +282,7 @@ public class Bank {
                     for (int i = 0; i < TellerCount; i++) {
                         // if a teller is free, take it
                         if (isTellerAvailable[i]) {
+                            // set bool to false/busy and store teller id
                           isTellerAvailable[i] = false;
                           tellerID = i;
                           customerAtTeller[i] = id;
@@ -291,20 +296,24 @@ public class Bank {
                 if (tellerID == -1) {
                     try {
                         for (int i = 0; i < TellerCount; i++) {
+                            // try to acquire a signal in case teller becomes free
                             if (isTellerReady[i].tryAcquire()) {
                                 synchronized (tellerLock) {
+                                    // if free set bool to busy and store teller id
                                     if (isTellerAvailable[i]) {
                                         isTellerAvailable[i] = false;
                                         tellerID = i;
                                         customerAtTeller[i] = id;
                                         customerIdArray[i] = id;
                                         break;
+                                        // if not release the signal back
                                     } else {
                                         isTellerReady[i].release();
                                     }
                                 }
                             }
                         }
+                        // still no free teller sleep
                         if (tellerID == -1) {
                             Thread.sleep(10);
                         }
@@ -322,7 +331,6 @@ public class Bank {
             customerGiveID[tellerID].release();
 
             // wait for teller to ask for transaction type acquire it
-
             try {
                 tellerAskType[tellerID].acquire();
             } catch (InterruptedException e) {
