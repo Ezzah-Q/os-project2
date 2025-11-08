@@ -130,3 +130,8 @@
 - next session I will test this with 50 customers
 - I will see if this works on the utd cs server
 - I will also finish adding comments
+
+11-07-25 6:18 pm
+- before session
+- Today I will test program with 50 customers to see if the logic still holds
+- I will also see if this code works on the utd servers
