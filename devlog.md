@@ -145,3 +145,7 @@
 11-07-25 7:03pm
 - forgot to add a readme
 
+11-07-25 7:14
+- after session
+- created readme
+- final commit and push before turning in
